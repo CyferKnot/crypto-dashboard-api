@@ -19,7 +19,7 @@ export async function getPrices(idsParam) {
   });
 
   if (idsToFetch.length > 0) {
-    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${idsToFetch>
+    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${idsToFetch.join(',')}&vs_currencies=usd`;
     const response = await fetch(url);
     const data = await response.json();
     idsToFetch.forEach(id => {
@@ -34,7 +34,7 @@ export async function getPrices(idsParam) {
 }
 
 export async function getHistory(id, days) {
-  const url = `https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_cur>
+  const url = `https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=usd&days=${days}`;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Failed to fetch history: ${response.statusText}`);

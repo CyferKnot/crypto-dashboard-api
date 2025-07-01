@@ -1,4 +1,7 @@
 // index.js
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -6,7 +9,7 @@ import rateLimit from 'express-rate-limit';
 import priceRouter from './routes/price.js';
 import alertRouter from './routes/alert.js';
 import historyRouter from './routes/history.js';
-
+import walletRouter from './routes/wallet.js';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -25,6 +28,7 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Routes
+app.use('/api/wallet-scan', walletRouter);
 app.use('/api/price', priceRouter);
 app.use('/api/alert', alertRouter);
 app.use('/api/history', historyRouter);
