@@ -1,26 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Crypto Dashboard</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 1rem; background: #f5f5f5; }
-    h2 { margin-top: 2rem; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
-    th, td { padding: 0.5rem; border: 1px solid #ccc; text-align: left; }
-    th { background: #eee; }
+    body {
+      font-family: sans-serif;
+      margin: 2rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 2rem;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.5rem;
+      text-align: left;
+    }
+    form {
+      margin-top: 2rem;
+    }
+    input[type="text"],
+    input[type="number"] {
+      padding: 0.5rem;
+      margin-right: 0.5rem;
+    }
   </style>
 </head>
 <body>
-  <h1>🧾 Crypto Dashboard</h1>
+  <h1>Crypto Dashboard</h1>
 
   <section>
-    <h2>Holdings</h2>
-    <table id="holdings">
+    <h2>Current Holdings</h2>
+    <table id="holdings-table">
       <thead>
         <tr>
-          <th>Token</th><th>Address</th><th>Balance</th><th>USD Price</th><th>USD Value</th>
+          <th>Token</th>
+          <th>Address</th>
+          <th>Balance</th>
+          <th>Price</th>
+          <th>Value</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -29,10 +50,13 @@
 
   <section>
     <h2>Price Targets</h2>
-    <table id="targets">
+    <table id="targets-table">
       <thead>
         <tr>
-          <th>Token</th><th>Buy Target</th><th>Profit Target</th><th>Alert Sent</th>
+          <th>Symbol</th>
+          <th>Buy Target</th>
+          <th>Profit Target</th>
+          <th>Alert Sent</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -40,11 +64,25 @@
   </section>
 
   <section>
-    <h2>Alert Log</h2>
-    <table id="alerts">
+    <h2>Set Price Target</h2>
+    <form id="target-form">
+      <input type="text" id="symbol" placeholder="Token Symbol (e.g. ETH)" required />
+      <input type="number" id="buy" placeholder="Buy Target" step="0.0001" />
+      <input type="number" id="profit" placeholder="Profit Target" step="0.0001" />
+      <button type="submit">Save</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Alerts Log</h2>
+    <table id="alerts-log-table">
       <thead>
         <tr>
-          <th>Token</th><th>Triggered At</th><th>Price</th><th>Direction</th><th>Action</th>
+          <th>Symbol</th>
+          <th>Triggered At</th>
+          <th>Trigger Price</th>
+          <th>Direction</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -52,32 +90,103 @@
   </section>
 
   <script>
-    async function loadData() {
-      const [holdings, targets, alerts] = await Promise.all([
-        fetch('/api/holdings').then(r => r.json()),
-        fetch('/api/targets').then(r => r.json()),
-        fetch('/api/targets/alerts-log').then(r => r.json())
-      ]);
+    const walletAddresses = [
+      "0x6E2F0275920F00e587ABD476Af915ab71A45C76C",
+      // Add more wallet addresses here
+    ];
 
-      const fillTable = (id, rows, formatter) => {
-        const tbody = document.getElementById(id).querySelector('tbody');
-        tbody.innerHTML = rows.map(formatter).join('');
-      };
+    async function loadHoldings() {
+      const table = document.querySelector('#holdings-table tbody');
+      table.innerHTML = '';
 
-      fillTable('holdings', holdings, row => `
-        <tr><td>${row.token_symbol}</td><td>${row.token_address}</td><td>${row.balance}</td><td>${row.usd_price}</td><td>${row.usd_value}</td></tr>
-      `);
+      for (const address of walletAddresses) {
+        try {
+          const res = await fetch(`/api/wallet-scan?address=${address}`);
+          const data = await res.json();
 
-      fillTable('targets', targets, row => `
-        <tr><td>${row.token_symbol}</td><td>${row.buy_target}</td><td>${row.profit_target}</td><td>${row.alert_sent}</td></tr>
-      `);
+          // Insert a heading row for each wallet
+          const headerRow = table.insertRow();
+          const cell = headerRow.insertCell();
+          cell.colSpan = 5;
+          cell.innerHTML = `<strong>Wallet: ${address}</strong>`;
+          cell.style.backgroundColor = '#f0f0f0';
 
-      fillTable('alerts', alerts, row => `
-        <tr><td>${row.token_symbol}</td><td>${row.triggered_at}</td><td>${row.trigger_price}</td><td>${row.direction}</td><td>${row.action}</td></tr>
-      `);
+          data.forEach(token => {
+            const row = table.insertRow();
+            row.innerHTML = `
+              <td>${token.symbol}</td>
+              <td>${token.address}</td>
+              <td>${token.balance}</td>
+              <td>${token.usd_price}</td>
+              <td>${token.usd_value}</td>
+            `;
+          });
+        } catch (err) {
+          console.error(`Error loading wallet ${address}`, err);
+        }
+      }
     }
 
-    loadData();
+    async function loadPriceTargets() {
+      const res = await fetch('/api/targets');
+      const data = await res.json();
+
+      const table = document.querySelector('#targets-table tbody');
+      table.innerHTML = '';
+
+      data.forEach(t => {
+        const row = table.insertRow();
+        row.innerHTML = `
+          <td>${t.token_symbol}</td>
+          <td>${t.buy_target}</td>
+          <td>${t.profit_target}</td>
+          <td>${t.alert_sent ? '✅' : ''}</td>
+        `;
+      });
+    }
+
+    async function loadAlertsLog() {
+      const res = await fetch('/api/targets/alerts-log');
+      const data = await res.json();
+
+      const table = document.querySelector('#alerts-log-table tbody');
+      table.innerHTML = '';
+
+      data.forEach(a => {
+        const row = table.insertRow();
+        row.innerHTML = `
+          <td>${a.token_symbol}</td>
+          <td>${new Date(a.triggered_at).toLocaleString()}</td>
+          <td>${a.trigger_price}</td>
+          <td>${a.direction}</td>
+          <td>${a.action}</td>
+        `;
+      });
+    }
+
+    document.getElementById('target-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const symbol = document.getElementById('symbol').value.trim();
+      const buy = parseFloat(document.getElementById('buy').value);
+      const profit = parseFloat(document.getElementById('profit').value);
+      await fetch('/api/targets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token_symbol: symbol,
+          buy_target: isNaN(buy) ? null : buy,
+          profit_target: isNaN(profit) ? null : profit
+        })
+      });
+      await loadPriceTargets();
+      e.target.reset();
+    });
+
+    window.onload = () => {
+      loadHoldings();
+      loadPriceTargets();
+      loadAlertsLog();
+    };
   </script>
 </body>
 </html>

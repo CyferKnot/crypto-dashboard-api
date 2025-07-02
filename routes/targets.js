@@ -1,6 +1,6 @@
 // routes/targets.js
 import express from 'express';
-import { getPriceTargets, getTriggeredTargets, logAlert, setAlertSent, getAlertsLog } from '../db/db.js';
+import { getPriceTargets, getTriggeredTargets, logAlert, setAlertSent, getAlertsLog, setPriceTarget } from '../db/db.js';
 import { getPrices } from '../services/coingecko.js';
 import { sendAlert } from '../services/discord.js';
 
