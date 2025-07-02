@@ -72,6 +72,11 @@ export async function getAllHoldings() {
   return db.all(`SELECT * FROM holdings`);
 }
 
+export async function getHoldingsByWallet(wallet_address) {
+  const db = await getDB();
+  return db.all(`SELECT * FROM holdings WHERE wallet_address = ?`, [wallet_address]);
+}
+
 export async function setPriceTarget(token_symbol, buy_target, profit_target) {
   const db = await getDB();
   await db.run(
@@ -89,6 +94,11 @@ export async function getPriceTargets() {
   return db.all(`SELECT * FROM price_targets`);
 }
 
+export async function getPriceTargetForToken(token_symbol) {
+  const db = await getDB();
+  return db.get(`SELECT * FROM price_targets WHERE token_symbol = ?`, [token_symbol]);
+}
+
 export async function logAlert(token_symbol, trigger_price, direction, action) {
   const db = await getDB();
   await db.run(
@@ -104,4 +114,32 @@ export async function getAlertsLog(limit = 100) {
     `SELECT * FROM alerts_log ORDER BY triggered_at DESC LIMIT ?`,
     [limit]
   );
+}
+
+export async function setAlertSent(token_symbol, sent = true) {
+  const db = await getDB();
+  await db.run(
+    `UPDATE price_targets SET alert_sent = ? WHERE token_symbol = ?`,
+    [sent ? 1 : 0, token_symbol]
+  );
+}
+
+export async function getTriggeredTargets(currentPrices) {
+  const db = await getDB();
+  const targets = await db.all(`SELECT * FROM price_targets WHERE alert_sent = 0`);
+  return targets.filter(row => {
+    const price = currentPrices[row.token_symbol.toLowerCase()]?.usd;
+    if (!price) return false;
+    return (row.buy_target && price <= row.buy_target) || (row.profit_target && price >= row.profit_target);
+  });
+}
+
+export async function clearAllAlertFlags() {
+  const db = await getDB();
+  await db.run(`UPDATE price_targets SET alert_sent = 0`);
+}
+
+export async function deleteAllHoldings() {
+  const db = await getDB();
+  await db.run(`DELETE FROM holdings`);
 }

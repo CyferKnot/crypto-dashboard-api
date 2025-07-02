@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crypto Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 1rem; background: #f5f5f5; }
+    h2 { margin-top: 2rem; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
+    th, td { padding: 0.5rem; border: 1px solid #ccc; text-align: left; }
+    th { background: #eee; }
+  </style>
+</head>
+<body>
+  <h1>🧾 Crypto Dashboard</h1>
+
+  <section>
+    <h2>Holdings</h2>
+    <table id="holdings">
+      <thead>
+        <tr>
+          <th>Token</th><th>Address</th><th>Balance</th><th>USD Price</th><th>USD Value</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Price Targets</h2>
+    <table id="targets">
+      <thead>
+        <tr>
+          <th>Token</th><th>Buy Target</th><th>Profit Target</th><th>Alert Sent</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Alert Log</h2>
+    <table id="alerts">
+      <thead>
+        <tr>
+          <th>Token</th><th>Triggered At</th><th>Price</th><th>Direction</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <script>
+    async function loadData() {
+      const [holdings, targets, alerts] = await Promise.all([
+        fetch('/api/holdings').then(r => r.json()),
+        fetch('/api/targets').then(r => r.json()),
+        fetch('/api/targets/alerts-log').then(r => r.json())
+      ]);
+
+      const fillTable = (id, rows, formatter) => {
+        const tbody = document.getElementById(id).querySelector('tbody');
+        tbody.innerHTML = rows.map(formatter).join('');
+      };
+
+      fillTable('holdings', holdings, row => `
+        <tr><td>${row.token_symbol}</td><td>${row.token_address}</td><td>${row.balance}</td><td>${row.usd_price}</td><td>${row.usd_value}</td></tr>
+      `);
+
+      fillTable('targets', targets, row => `
+        <tr><td>${row.token_symbol}</td><td>${row.buy_target}</td><td>${row.profit_target}</td><td>${row.alert_sent}</td></tr>
+      `);
+
+      fillTable('alerts', alerts, row => `
+        <tr><td>${row.token_symbol}</td><td>${row.triggered_at}</td><td>${row.trigger_price}</td><td>${row.direction}</td><td>${row.action}</td></tr>
+      `);
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
