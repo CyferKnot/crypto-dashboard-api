@@ -1,5 +1,6 @@
 // routes/targets.js
 import express from 'express';
+import { getDB } from '../db/db.js';
 import { getPriceTargets, getTriggeredTargets, logAlert, setAlertSent, getAlertsLog, setPriceTarget } from '../db/db.js';
 import { getPrices } from '../services/coingecko.js';
 import { sendAlert } from '../services/discord.js';
@@ -7,9 +8,9 @@ import { sendAlert } from '../services/discord.js';
 const router = express.Router();
 
 router.post('/', async (req, res) => {
-  const { token_symbol, buy_target, profit_target } = req.body;
+  const { token_symbol, buy_target, profit_target, buy_tax = 0, sell_tax = 0 } = req.body;
   try {
-    await setPriceTarget(token_symbol, buy_target, profit_target);
+    await setPriceTarget(token_symbol, buy_target, profit_target, buy_tax, sell_tax);
     res.json({ status: 'ok', message: 'Price target set/updated.' });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -54,6 +55,19 @@ router.post('/check-alerts', async (req, res) => {
     }
 
     res.json({ status: 'ok', triggered });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /api/targets/:token_symbol
+router.get('/:token_symbol', async (req, res) => {
+  const db = await getDB();
+  const symbol = req.params.token_symbol.toUpperCase();
+  try {
+    const row = await db.get(`SELECT * FROM targets WHERE token_symbol = ?`, symbol);
+    if (!row) return res.status(404).json({ message: 'No target set for this token yet.' });
+    res.json(row);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
