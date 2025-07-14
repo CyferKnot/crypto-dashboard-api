@@ -1,4 +1,20 @@
 // public/dashboard.js
+function populateSymbolDatalist() {
+  fetch('/api/wallet-scan?address=0x6E2F0275920F00e587ABD476Af915ab71A45C76C')
+    .then(res => res.json())
+    .then(data => {
+      if (!Array.isArray(data)) return;
+      const symbols = [...new Set(data.map(h => h.symbol).filter(Boolean))];  // Unique + no empty
+      const datalist = document.getElementById('symbolOptions');
+      datalist.innerHTML = '';
+      symbols.forEach(sym => {
+        const option = document.createElement('option');
+        option.value = sym;
+        datalist.appendChild(option);
+      });
+    });
+}
+
 async function fetchHoldings() {
   try {
     const res = await fetch('/api/wallet-scan?address=0x6E2F0275920F00e587ABD476Af915ab71A45C76C');
