@@ -9,13 +9,13 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
+import holdingsRouter from './routes/holdings.js';
 import priceRouter from './routes/price.js';
 import alertRouter from './routes/alerts.js';
 import historyRouter from './routes/history.js';
 import walletRouter from './routes/wallet.js';
 import devRouter from './routes/dev.js';
 import targetsRouter from './routes/targets.js';
-import holdingsRouter from './routes/holdings.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -36,13 +36,13 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Routes
+app.use('/api/holdings', holdingsRouter);
 app.use('/api/price', priceRouter);
 app.use('/api/alerts', alertRouter);
 app.use('/api/history', historyRouter);
 app.use('/api/wallet-scan', walletRouter);
 app.use('/api/dev', devRouter);
 app.use('/api/targets', targetsRouter);
-app.use('/api/holdings', holdingsRouter);
 app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
 // app.use('/dashboard', express.static(path.join(__dirname, 'public')));
 

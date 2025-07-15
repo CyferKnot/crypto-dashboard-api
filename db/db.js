@@ -24,14 +24,6 @@ export async function initDB() {
       UNIQUE(wallet_address, token_address)
     );
 
-    CREATE TABLE IF NOT EXISTS price_targets (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      token_symbol TEXT NOT NULL UNIQUE,
-      buy_target REAL,
-      profit_target REAL,
-      alert_sent INTEGER DEFAULT 0
-    );
-
     CREATE TABLE IF NOT EXISTS alerts_log (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       token_symbol TEXT,
