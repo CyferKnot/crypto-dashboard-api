@@ -67,6 +67,8 @@ async function populateSymbolDatalist() {
     const response = await fetch('/api/holdings');
     const holdings = await response.json();
 
+    // console.log('Holdings response:', holdings);
+
     holdings.forEach(({ token_symbol }) => {
       if (token_symbol) {
         const option = document.createElement('option');

@@ -5,6 +5,7 @@ const router = express.Router();
 
 // Return distinct token symbols from holdings (for the datalist)
 router.get('/', async (req, res) => {
+  const db = await getDB();
   try {
     const rows = await db.all('SELECT DISTINCT token_symbol FROM holdings ORDER BY token_symbol ASC');
     res.json(rows);
