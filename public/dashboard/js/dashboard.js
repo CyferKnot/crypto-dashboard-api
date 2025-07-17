@@ -133,9 +133,9 @@ document.getElementById('target-form').addEventListener('submit', async (e) => {
   const sellTax = document.getElementById('sellTaxInput').value || 0;
 
   const payload = {
-    token_symbol: symbol,
-    buy_target: parseFloat(buyTarget),
-    profit_target: parseFloat(profitTarget),
+    token_symbol,
+    buy_target,
+    profit_target,
     buy_tax: parseFloat(buyTax),
     sell_tax: parseFloat(sellTax),
   };
