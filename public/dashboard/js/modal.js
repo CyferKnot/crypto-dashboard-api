@@ -56,27 +56,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  async function populateSymbolDatalist() {
+    console.log('populateSymbolDatalist called');
+    const datalist = document.getElementById('symbolOptions');
+    if (!datalist) {
+      console.error('No datalist found');
+      return;
+    }
+    datalist.innerHTML = ''; // clear existing options
+
+    try {
+      const response = await fetch('/api/holdings');
+      const holdings = await response.json();
+
+     console.log('Holdings response:', holdings);
+
+      holdings.forEach(({ token_symbol }) => {
+        if (token_symbol) {
+          const option = document.createElement('option');
+          option.value = token_symbol;
+          datalist.appendChild(option);
+        }
+      });
+    } catch (err) {
+      console.error('Failed to load symbol options:', err);
+    }
+  }
+
   window.openTargetModal = openTargetModal; // 🔑 expose to global scope for HTML inline onclick
 });
 
-async function populateSymbolDatalist() {
-  const datalist = document.getElementById('symbolOptions');
-  datalist.innerHTML = ''; // clear existing options
-
-  try {
-    const response = await fetch('/api/holdings');
-    const holdings = await response.json();
-
-    // console.log('Holdings response:', holdings);
-
-    holdings.forEach(({ token_symbol }) => {
-      if (token_symbol) {
-        const option = document.createElement('option');
-        option.value = token_symbol;
-        datalist.appendChild(option);
-      }
-    });
-  } catch (err) {
-    console.error('Failed to load symbol options:', err);
-  }
-}
