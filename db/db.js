@@ -43,6 +43,13 @@ export async function initDB() {
     sell_tax REAL DEFAULT 0,
     alert_sent INTEGER DEFAULT 0
   );
+
+  CREATE TABLE IF NOT EXISTS wallets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    address TEXT NOT NULL UNIQUE,
+    chain TEXT NOT NULL DEFAULT 'eth',
+    label TEXT
+  );
   `);
 
   return db;
@@ -82,18 +89,18 @@ export async function getHoldingsByWallet(wallet_address) {
   return db.all(`SELECT * FROM holdings WHERE wallet_address = ?`, [wallet_address]);
 }
 
-export async function setPriceTarget(token_symbol, buy_target, profit_target, buy_tax = 0, sell_tax = 0) {
+export async function setPriceTarget(symbol, buy, profit, buyTax, sellTax, coingeckoId = null) {
   const db = await getDB();
-  await db.run(
-    `INSERT INTO targets (token_symbol, buy_target, profit_target, buy_tax, sell_tax, alert_sent)
-     VALUES (?, ?, ?, ?, ?, 0)
-     ON CONFLICT(token_symbol) DO UPDATE SET
-       buy_target = excluded.buy_target,
-       profit_target = excluded.profit_target,
-       buy_tax = excluded.buy_tax,
-       sell_tax = excluded.sell_tax`,
-    [token_symbol, buy_target, profit_target, buy_tax, sell_tax]
-  );
+  await db.run(`
+    INSERT INTO targets (token_symbol, buy_target, profit_target, buy_tax, sell_tax, coingecko_id)
+    VALUES (?, ?, ?, ?, ?, ?)
+    ON CONFLICT(token_symbol) DO UPDATE SET
+      buy_target = excluded.buy_target,
+      profit_target = excluded.profit_target,
+      buy_tax = excluded.buy_tax,
+      sell_tax = excluded.sell_tax,
+      coingecko_id = excluded.coingecko_id
+  `, [symbol, buy, profit, buyTax, sellTax, coingeckoId]);
 }
 
 export async function getPriceTargets() {

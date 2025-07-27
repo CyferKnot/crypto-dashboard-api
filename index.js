@@ -16,6 +16,7 @@ import historyRouter from './routes/history.js';
 import walletRouter from './routes/wallet.js';
 import devRouter from './routes/dev.js';
 import targetsRouter from './routes/targets.js';
+import syncRouter from './routes/sync.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,6 +45,7 @@ app.use('/api/wallet-scan', walletRouter);
 app.use('/api/dev', devRouter);
 app.use('/api/targets', targetsRouter);
 app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
+app.use('/api', syncRouter);
 // app.use('/dashboard', express.static(path.join(__dirname, 'public')));
 
 // Start server

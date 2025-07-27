@@ -17,10 +17,11 @@ function populateSymbolDatalist() {
 
 async function fetchHoldings() {
   try {
-    const res = await fetch('/api/wallet-scan?address=0x6E2F0275920F00e587ABD476Af915ab71A45C76C');
+    // const res = await fetch('/api/wallet-scan?address=0x6E2F0275920F00e587ABD476Af915ab71A45C76C');
+    const res = await fetch('/api/holdings');
     const holdingsData = await res.json();
     if (!Array.isArray(holdingsData)) {
-      console.error("Expected array from /api/targets/alerts-log but got:", data);
+      console.error("Expected array from /api/holdings but got:", data);
       return;
     }
 
@@ -29,11 +30,12 @@ async function fetchHoldings() {
     holdingsData.forEach(row => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td>${row.symbol}</td>
-        <td>${row.address}</td>
+        <td>${row.token_symbol}</td>
+        <td>${row.token_address}</td>
         <td>${parseFloat(row.balance).toFixed(4)}</td>
         <td>$${parseFloat(row.usd_price).toFixed(2)}</td>
         <td>$${parseFloat(row.usd_value).toFixed(2)}</td>
+        <td>${row.coingecko_id || '<i>None</i>'}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -94,8 +96,20 @@ async function fetchAlertsLog() {
 function renderHoldingsChart(holdings) {
   const ctx = document.getElementById('holdingsChart').getContext('2d');
 
-  const labels = holdings.map(h => h.symbol);
+  const labels = holdings.map(t => t.token_symbol || t.symbol || t.coingecko_id || 'Unknown');
   const data = holdings.map(h => h.usd_value);
+
+  const categoryColors = {
+    'L1': '#627eea',
+    'AI': '#8e44ad',
+    'RWA': '#3498db',
+    'DEX': '#16a085',
+    'Gaming': '#e67e22',
+    'Infra': '#2c3e50',
+    'Tools': '#f39c12',
+    'Other': '#7f8c8d'
+  };
+
 
   new Chart(ctx, {
     type: 'pie',
@@ -104,9 +118,7 @@ function renderHoldingsChart(holdings) {
       datasets: [{
         label: 'USD Value',
         data,
-        backgroundColor: labels.map(() =>
-          `hsl(${Math.floor(Math.random() * 360)}, 70%, 60%)`
-        ),
+        backgroundColor: holdings.map(t => categoryColors[t.category] || categoryColors['Other']),
         borderWidth: 1
       }]
     },
@@ -125,10 +137,13 @@ function renderHoldingsChart(holdings) {
 
 document.getElementById('target-form').addEventListener('submit', async (e) => {
   e.preventDefault();
+
+  console.log('dashboard.js target-form submit handler triggered');
+
   const token_symbol = document.getElementById('symbol').value.trim();
   const buy_target = parseFloat(document.getElementById('buy').value);
   const profit_target = parseFloat(document.getElementById('profit').value);
-
+  const coingecko_id = document.getElementById('coingeckoId').value.trim();
   const buyTax = document.getElementById('buyTaxInput').value || 0;
   const sellTax = document.getElementById('sellTaxInput').value || 0;
 
@@ -136,6 +151,7 @@ document.getElementById('target-form').addEventListener('submit', async (e) => {
     token_symbol,
     buy_target,
     profit_target,
+    coingecko_id,
     buy_tax: parseFloat(buyTax),
     sell_tax: parseFloat(sellTax),
   };
@@ -151,6 +167,27 @@ document.getElementById('target-form').addEventListener('submit', async (e) => {
 
   document.getElementById('target-form').reset();
   fetchTargets();
+});
+
+document.getElementById('sync-btn').addEventListener('click', async () => {
+  const status = document.getElementById('sync-status');
+  status.textContent = 'Syncing... ⏳';
+
+  try {
+    const res = await fetch('/api/sync-wallets', {
+      method: 'POST'
+    });
+
+    if (!res.ok) throw new Error('Sync failed');
+
+    status.textContent = '✅ Sync complete!';
+    await fetchHoldings(); // Refresh dashboard
+  } catch (err) {
+    console.error('Sync error:', err);
+    status.textContent = '❌ Sync failed';
+  }
+
+  setTimeout(() => status.textContent = '', 4000); // Clear message after 4s
 });
 
 fetchHoldings();

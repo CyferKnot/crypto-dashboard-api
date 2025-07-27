@@ -7,9 +7,11 @@ import { sendAlert } from '../services/discord.js';
 const router = express.Router();
 
 router.post('/', async (req, res) => {
-  const { token_symbol, buy_target, profit_target, buy_tax = 0, sell_tax = 0 } = req.body;
+  const { token_symbol, buy_target, profit_target, buy_tax = 0, sell_tax = 0, coingecko_id } = req.body;
   try {
-    await setPriceTarget(token_symbol, buy_target, profit_target, buy_tax, sell_tax);
+    console.log('target.js Coingecko ID:', coingecko_id)
+    await setPriceTarget(token_symbol, buy_target, profit_target, buy_tax, sell_tax, coingecko_id);
+
     res.json({ status: 'ok', message: 'Price target set/updated.' });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -63,9 +65,19 @@ router.post('/check-alerts', async (req, res) => {
 router.get('/:token_symbol', async (req, res) => {
   const db = await getDB();
   const symbol = req.params.token_symbol.toUpperCase();
+
   try {
-    const row = await db.get(`SELECT * FROM targets WHERE token_symbol = ?`, symbol);
-    if (!row) return res.status(404).json({ message: 'No target set for this token yet.' });
+    const row = await db.get(`
+      SELECT t.*, h.coingecko_id
+      FROM targets t
+      LEFT JOIN holdings h ON t.token_symbol = h.token_symbol
+      WHERE t.token_symbol = ?
+    `, symbol);
+
+    if (!row) {
+      return res.status(404).json({ message: 'No target set for this token yet.' });
+    }
+
     res.json(row);
   } catch (e) {
     res.status(500).json({ error: e.message });

@@ -7,6 +7,9 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const coingeckoMap = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/coingecko-map.json'), 'utf8'));
 
+const BLACKLISTED_ADDRESSES = new Set([
+  '0x73454acfddb7a36a3cd8eb171fbea86c6a55e550' // Fake BUILD
+]);
 
 export async function scanWallet(address, chain = 'eth') {
   const MORALIS_API_KEY = process.env.MORALIS_API_KEY;
@@ -58,10 +61,11 @@ export async function scanWallet(address, chain = 'eth') {
   return json.result
     .filter(t => {
       const balance = parseFloat(t.balance_formatted);
-      return balance > 0 && !isSpamToken(t.name);
+      return balance > 0 && !isSpamToken(t.name) && !BLACKLISTED_ADDRESSES.has(t.token_address?.toLowerCase());
     })
     .map(t => {
-      const coingecko_id = coingeckoMap[t.symbol?.toUpperCase()] || null;
+      const key = `${t.symbol?.toUpperCase()}:${t.token_address?.toLowerCase()}`;
+      const coingecko_id = coingeckoMap[key] || coingeckoMap[t.symbol?.toUpperCase()] || null;
       return {
         address: t.token_address,
         symbol: t.symbol,

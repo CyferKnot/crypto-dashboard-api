@@ -7,11 +7,23 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   const db = await getDB();
   try {
-    const rows = await db.all('SELECT DISTINCT token_symbol FROM holdings ORDER BY token_symbol ASC');
+    const rows = await db.all(`
+      SELECT 
+        token_symbol,
+        token_address,
+        coingecko_id,
+        category,
+        SUM(balance) AS balance,
+        AVG(usd_price) AS usd_price,
+        SUM(usd_value) AS usd_value
+      FROM holdings
+      GROUP BY token_symbol, token_address
+      ORDER BY usd_value DESC
+    `);
     res.json(rows);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Database error' });
+    console.error('Error fetching holdings:', err);
+    res.status(500).json({ error: 'Failed to fetch holdings' });
   }
 });
 

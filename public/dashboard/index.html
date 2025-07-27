@@ -22,15 +22,19 @@
     <table id="holdings-table">
       <thead>
         <tr>
-          <th>Token</th>
-          <th>Address</th>
+          <th>Symbol</th>
+          <th>Token Address</th>
           <th>Balance</th>
           <th>Price</th>
           <th>Value</th>
+          <th>Coingecko ID</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
+    <button id="sync-btn" class="btn btn-primary">🔄 Sync Wallets</button>
+    <span id="sync-status" style="margin-left: 10px;"></span>
+
   </section>
   <section>
     <div id="chart-container" style="max-width: 600px; margin: 2rem auto;">
@@ -49,6 +53,7 @@
           <th>Buy Target</th>
           <th>Profit Target</th>
           <th>Alert Sent</th>
+          <th></th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -84,6 +89,10 @@
           <label for="symbol" class="form-label">Token Symbol</label>
           <input class="form-control" list="symbolOptions" id="symbol" placeholder="e.g., ETH" required>
           <datalist id="symbolOptions"></datalist>
+        </div>
+        <div class="mb-3">
+          <label for="coingeckoId" class="form-label">CoinGecko ID</label>
+          <input type="text" class="form-control" id="coingeckoId" name="coingecko_id">
         </div>
 
         <div class="row">
