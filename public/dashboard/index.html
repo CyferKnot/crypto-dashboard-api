@@ -13,10 +13,17 @@
   <link rel="stylesheet" href="css/style.css">
   <script src="js/dashboard.js" defer></script>
   <script src="js/modal.js" defer></script>
+  <script src="js/settings.js" defer></script>
 </head>
 <body>
   <h1>Crypto Dashboard</h1>
   <h2>Portfolio Breakdown</h2>
+  <button class="btn btn-secondary position-fixed bottom-0 end-0 m-4 rounded-circle"
+        data-bs-toggle="modal" data-bs-target="#walletSettingsModal"
+        style="z-index: 999;">
+    ⚙️
+  </button>
+
   <section>
     <h2>Current Holdings</h2>
     <table id="holdings-table">
@@ -123,6 +130,64 @@
         <button type="submit" class="btn btn-primary">Save Target</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Wallet Settings Modal -->
+<div class="modal fade" id="walletSettingsModal" tabindex="-1" aria-labelledby="walletSettingsModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="wallet-form" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="walletSettingsModalLabel">Add Wallet</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="walletLabel" class="form-label">Label</label>
+          <input type="text" class="form-control" id="walletLabel" placeholder="Main Wallet" required>
+        </div>
+        <div class="mb-3">
+          <label for="walletAddress" class="form-label">Wallet Address</label>
+          <input type="text" class="form-control" id="walletAddress" placeholder="0x..." required>
+        </div>
+
+        <div class="mb-3">
+          <label for="walletChain" class="form-label">Chain</label>
+          <select class="form-control" id="walletChain" required>
+            <option value="eth">Ethereum</option>
+            <option value="arbitrum">Arbitrum</option>
+            <option value="optimism">Optimism</option>
+            <option value="base">Base</option>
+            <option value="polygon">Polygon</option>
+            <option value="bsc">BSC</option>
+            <!-- Add others as needed -->
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Wallet</button>
+      </div>
+    </form>
+
+    <hr>
+    <h6>Saved Wallets</h6>
+    <table class="table table-sm" id="wallets-table">
+      <thead>
+        <tr>
+          <th>Label</th>
+          <th>Address</th>
+          <th>Chain</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="wallets-table-body">
+        <!-- Dynamically populated -->
+      </tbody>
+    </table>
+
   </div>
 </div>
 

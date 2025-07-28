@@ -14,9 +14,11 @@ import priceRouter from './routes/price.js';
 import alertRouter from './routes/alerts.js';
 import historyRouter from './routes/history.js';
 import walletRouter from './routes/wallet.js';
+import walletRoutes from './routes/wallets.js';
 import devRouter from './routes/dev.js';
 import targetsRouter from './routes/targets.js';
 import syncRouter from './routes/sync.js';
+import settingsRoutes from './routes/settings.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -42,10 +44,13 @@ app.use('/api/price', priceRouter);
 app.use('/api/alerts', alertRouter);
 app.use('/api/history', historyRouter);
 app.use('/api/wallet-scan', walletRouter);
+app.use('/api', walletRoutes);
 app.use('/api/dev', devRouter);
 app.use('/api/targets', targetsRouter);
 app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
 app.use('/api', syncRouter);
+app.use('/api/settings', settingsRoutes);
+
 // app.use('/dashboard', express.static(path.join(__dirname, 'public')));
 
 // Start server

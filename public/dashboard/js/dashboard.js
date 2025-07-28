@@ -1,4 +1,3 @@
-// public/dashboard.js
 function populateSymbolDatalist() {
   fetch('/api/wallet-scan?address=0x6E2F0275920F00e587ABD476Af915ab71A45C76C')
     .then(res => res.json())
