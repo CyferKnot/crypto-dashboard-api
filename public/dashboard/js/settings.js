@@ -1,6 +1,7 @@
 // public/js/settings.js
 
 document.addEventListener('DOMContentLoaded', () => {
+  populateChainOptions();
   fetchWallets();
 
   document.getElementById('wallet-form').addEventListener('submit', async (e) => {
@@ -13,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const res = await fetch('/api/wallets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address, chain })
+      body: JSON.stringify({ address, label, chain })
     });
 
     if (res.ok) {
@@ -24,22 +25,20 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// async function fetchWallets() {
-//   const res = await fetch('/api/settings/wallets');
-//   const wallets = await res.json();
-//   const tableBody = document.getElementById('wallets-table-body');
-//   tableBody.innerHTML = '';
+async function populateChainOptions() {
+  const res = await fetch('/api/settings/chains');
+  const chains = await res.json();
 
-//   wallets.forEach(w => {
-//     const row = document.createElement('tr');
-//     row.innerHTML = `
-//       <td>${w.address}</td>
-//       <td>${w.chain}</td>
-//       <td><button class="btn btn-danger btn-sm" onclick="deleteWallet(${w.id})">Delete</button></td>
-//     `;
-//     tableBody.appendChild(row);
-//   });
-// }
+  const select = document.getElementById('walletChain');
+  select.innerHTML = ''; // Clear existing options
+
+  chains.forEach(c => {
+    const option = document.createElement('option');
+    option.value = c.key;
+    option.textContent = c.value;
+    select.appendChild(option);
+  });
+}
 
 async function fetchWallets() {
   const res = await fetch('/api/wallets');
@@ -73,10 +72,8 @@ async function fetchWallets() {
 }
 
 async function deleteWallet(id) {
-  await fetch(`/api/settings/wallets/${id}`, { method: 'DELETE' });
+  await fetch(`/api/wallets/${id}`, { method: 'DELETE' });
   fetchWallets();
 }
 
-// document.addEventListener('DOMContentLoaded', () => {
-//   fetchWallets();
-// });
+
