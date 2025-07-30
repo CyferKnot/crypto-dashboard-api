@@ -1,8 +1,26 @@
 // public/js/settings.js
 
 document.addEventListener('DOMContentLoaded', () => {
+  fetchChains();
   populateChainOptions();
   fetchWallets();
+
+  document.getElementById('chain-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const key = document.getElementById('chainKey').value.trim();
+    const label = document.getElementById('chainLabel').value.trim();
+
+    if (!key || !label) return;
+
+    await fetch('/api/chains', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, label })
+    });
+
+    document.getElementById('chain-form').reset();
+    fetchChains();
+  });
 
   document.getElementById('wallet-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -24,6 +42,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+async function fetchChains() {
+  const res = await fetch('/api/chains');
+  const chains = await res.json();
+
+  const tbody = document.getElementById('chains-table-body');
+  if (!tbody) return;
+
+  tbody.innerHTML = '';
+  chains.forEach(c => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td><code>${c.key}</code></td>
+      <td>${c.value}</td>
+      <td>
+        <button class="btn btn-sm btn-danger" data-key="${c.key}">🗑️</button>
+      </td>
+    `;
+    row.querySelector('button').addEventListener('click', async () => {
+      if (!confirm(`Delete chain "${c.value}"?`)) return;
+
+      await fetch(`/api/chains/${c.key}`, { method: 'DELETE' });
+      fetchChains();
+    });
+    tbody.appendChild(row);
+  });
+}
 
 async function populateChainOptions() {
   const res = await fetch('/api/settings/chains');

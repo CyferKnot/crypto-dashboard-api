@@ -19,6 +19,7 @@ import devRouter from './routes/dev.js';
 import targetsRouter from './routes/targets.js';
 import syncRouter from './routes/sync.js';
 import settingsRoutes from './routes/settings.js';
+import chainsRoutes from './routes/chains.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -50,6 +51,7 @@ app.use('/api/targets', targetsRouter);
 app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
 app.use('/api', syncRouter);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/chains', chainsRoutes);
 
 // app.use('/dashboard', express.static(path.join(__dirname, 'public')));
 

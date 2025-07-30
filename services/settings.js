@@ -17,7 +17,8 @@ export async function getSetting(setting_key, fallback = null) {
   }
 }
 
-export async function getSettingByType(setting_type, setting_key, fallback = null) {
+// Returns a single setting by type and key
+export async function getSettingByTypeAndKey(setting_type, setting_key, fallback = null) {
   const db = await getDB();
   const row = await db.get(
     `SELECT setting_value FROM settings WHERE setting_type = ? AND setting_key = ?`,
@@ -33,8 +34,28 @@ export async function getSettingByType(setting_type, setting_key, fallback = nul
   }
 }
 
-export async function getChains() {
+export async function getSettingsByType(setting_type) {
   const db = await getDB();
-  const rows = await db.all(`SELECT setting_key AS id, setting_value AS name FROM settings WHERE setting_type = 'chain'`);
+  const rows = await db.all(
+    `SELECT setting_key AS key, setting_value AS value FROM settings WHERE setting_type = ? ORDER BY setting_value`,
+    [setting_type]
+  );
   return rows;
+}
+
+
+export async function addSetting(type, key, value) {
+  const db = await getDB();
+  return db.run(
+    `INSERT INTO settings (setting_type, setting_key, setting_value) VALUES (?, ?, ?)`,
+    [type, key, value]
+  );
+}
+
+export async function deleteSetting(type, key) {
+  const db = await getDB();
+  return db.run(
+    `DELETE FROM settings WHERE setting_type = ? AND setting_key = ?`,
+    [type, key]
+  );
 }
