@@ -47,6 +47,7 @@
           <th>Price</th>
           <th>Value</th>
           <th>Coingecko ID</th>
+          <th>Wallets</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -149,12 +150,10 @@
   <div class="modal fade" id="walletSettingsModal" tabindex="-1" aria-labelledby="walletSettingsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
-
         <div class="modal-header">
           <h5 class="modal-title" id="walletSettingsModalLabel">Add Wallet</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-
         <div class="modal-body">
           <!-- Wallet Form -->
           <form id="wallet-form">
@@ -170,15 +169,12 @@
               <label for="walletChain" class="form-label">Chain</label>
               <select class="form-select" id="walletChain" required></select>
             </div>
-
             <div class="d-flex justify-content-end gap-2">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
               <button type="submit" class="btn btn-primary">Add Wallet</button>
             </div>
           </form>
-
           <hr class="my-4" />
-
           <!-- Wallet List -->
           <h6>Saved Wallets</h6>
           <div class="table-responsive">
@@ -197,7 +193,6 @@
             </table>
           </div>
         </div>
-
       </div>
     </div>
   </div>
@@ -210,7 +205,6 @@
           <h5 class="modal-title" id="chainSettingsModalLabel">Manage Chains</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-
         <form id="chain-form">
           <div class="modal-body">
             <div class="mb-3 w-100">
@@ -222,15 +216,12 @@
               <input type="text" class="form-control" id="chainKey" placeholder="eth" required>
             </div>
           </div>
-
           <div class="modal-footer w-100">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             <button type="submit" class="btn btn-primary">Save Chain</button>
           </div>
         </form>
-
         <hr class="my-4" />
-
         <!-- Chain List -->
         <div class="px-3 pb-3">
           <h6>Saved Chains</h6>
@@ -238,7 +229,7 @@
             <thead>
               <tr>
                 <th>Label</th>
-                <th>Key</th>
+                <th>Chain</th>
                 <th></th>
               </tr>
             </thead>
@@ -250,7 +241,5 @@
       </div>
     </div>
 </div>
-
-
 </body>
 </html>

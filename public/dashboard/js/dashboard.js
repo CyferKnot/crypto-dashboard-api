@@ -16,7 +16,6 @@ function populateSymbolDatalist() {
 
 async function fetchHoldings() {
   try {
-    // const res = await fetch('/api/wallet-scan?address=0x6E2F0275920F00e587ABD476Af915ab71A45C76C');
     const res = await fetch('/api/holdings');
     const holdingsData = await res.json();
     if (!Array.isArray(holdingsData)) {
@@ -29,15 +28,38 @@ async function fetchHoldings() {
     holdingsData.forEach(row => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td>${row.token_symbol}</td>
+        <td>
+          ${row.group_key}
+          ${row.coingecko_id ? '' : '<span class="badge bg-warning text-dark">Unmapped</span>'}
+        </td>
         <td>${row.token_address}</td>
         <td>${parseFloat(row.balance).toFixed(4)}</td>
         <td>$${parseFloat(row.usd_price).toFixed(2)}</td>
         <td>$${parseFloat(row.usd_value).toFixed(2)}</td>
         <td>${row.coingecko_id || '<i>None</i>'}</td>
+        <td>${row.wallet_count}</td>
       `;
       tbody.appendChild(tr);
     });
+
+    //   tr.innerHTML = `
+    //     <td>
+    //       ${row.token_symbol}
+    //       <span class="badge bg-light text-dark border ms-2">
+    //         <img src="/icons/${row.chain}.svg" alt="${row.chain}" width="14" height="14" class="me-1">
+    //         ${row.chain.toUpperCase()}
+    //       </span>
+    //     </td>
+    //     <td>${row.token_address}</td>
+    //     <td>${parseFloat(row.balance).toFixed(4)}</td>
+    //     <td>$${parseFloat(row.usd_price).toFixed(2)}</td>
+    //     <td>$${parseFloat(row.usd_value).toFixed(2)}</td>
+    //     <td>${row.coingecko_id || '<i>None</i>'}</td>
+    //     <td>${row.wallet_count}</td>
+    //   `;
+    //   tbody.appendChild(tr);
+    // });
+
     console.log('Chart data:', holdingsData);
     renderHoldingsChart(holdingsData); // ✅ Chart gets rendered here
 
@@ -57,21 +79,75 @@ async function fetchTargets() {
 
     const tbody = document.querySelector('#targets-table tbody');
     tbody.innerHTML = '';
+
     TargetData.forEach(row => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${row.token_symbol}</td>
-        <td>${row.buy_target ?? ''}</td>
-        <td>${row.profit_target ?? ''}</td>
+        <td>
+          <span 
+            class="editable" 
+            contenteditable="true" 
+            data-symbol="${row.token_symbol}" 
+            data-field="buy_target"
+          >
+            ${row.buy_target ?? ''}
+          </span>
+        </td>
+        <td>
+          <span 
+            class="editable" 
+            contenteditable="true" 
+            data-symbol="${row.token_symbol}" 
+            data-field="profit_target"
+          >
+            ${row.profit_target ?? ''}
+          </span>
+        </td>
         <td>${row.alert_sent ? '✅' : ''}</td>
         <td><button class="btn btn-outline-primary btn-sm" onclick="openTargetModal('${row.token_symbol}')">Edit</button></td>
       `;
       tbody.appendChild(tr);
     });
+
+    bindEditableEvents();
   } catch (err) {
     console.error('Failed to parse targets:', err.message);
     console.error('Actual TargetData:', text);
   }
+}
+
+function bindEditableEvents() {
+  document.querySelectorAll('.editable').forEach(el => {
+    el.addEventListener('blur', async () => {
+      const symbol = el.dataset.symbol;
+      const field = el.dataset.field;
+      const value = el.textContent.trim();
+
+      const payload = {
+        token_symbol: symbol,
+        [field]: parseFloat(value) || 0
+      };
+
+      try {
+        const res = await fetch('/api/targets/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          el.classList.add('text-danger');
+          console.error(`Failed to update ${field} for ${symbol}`);
+        } else {
+          el.classList.add('text-success');
+          setTimeout(() => el.classList.remove('text-success'), 1000);
+        }
+      } catch (err) {
+        console.error('Update failed:', err);
+      }
+    });
+  });
 }
 
 async function fetchAlertsLog() {
@@ -93,9 +169,15 @@ async function fetchAlertsLog() {
 }
 
 function renderHoldingsChart(holdings) {
+
   const ctx = document.getElementById('holdingsChart').getContext('2d');
 
-  const labels = holdings.map(t => t.token_symbol || t.symbol || t.coingecko_id || 'Unknown');
+  // const labels = holdings.map(t => t.token_symbol || t.symbol || t.coingecko_id || 'Unknown');
+  const labels = holdings.map(t => {
+  const label = t.token_symbol || t.symbol || t.coingecko_id || 'Unknown';
+    return t.chain ? `${label.toUpperCase()} (${t.chain.toUpperCase()})` : label.toUpperCase();
+  });
+
   const data = holdings.map(h => h.usd_value);
 
   const categoryColors = {
@@ -109,15 +191,27 @@ function renderHoldingsChart(holdings) {
     'Other': '#7f8c8d'
   };
 
+  if (window.holdingsChart && typeof window.holdingsChart.destroy === 'function') {
+    window.holdingsChart.destroy();
+  }
 
-  new Chart(ctx, {
+  function getColorForToken(symbol) {
+    let hash = 0;
+    for (let i = 0; i < symbol.length; i++) {
+      hash = symbol.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = hash % 360;
+    return `hsl(${hue}, 70%, 60%)`;
+  }
+
+  window.holdingsChart = new Chart(ctx, {
     type: 'pie',
     data: {
       labels,
       datasets: [{
         label: 'USD Value',
         data,
-        backgroundColor: holdings.map(t => categoryColors[t.category] || categoryColors['Other']),
+        backgroundColor: holdings.map(t => getColorForToken(t.token_symbol || t.symbol || 'Other')),
         borderWidth: 1
       }]
     },

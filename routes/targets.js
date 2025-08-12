@@ -84,4 +84,27 @@ router.get('/:token_symbol', async (req, res) => {
   }
 });
 
+router.post('/update', async (req, res) => {
+  const { token_symbol, ...updates } = req.body;
+  if (!token_symbol || !Object.keys(updates).length) {
+    return res.status(400).json({ error: 'Missing token_symbol or updates' });
+  }
+
+  const db = await getDB();
+  const fields = Object.keys(updates);
+  const values = fields.map(f => updates[f]);
+  const setClause = fields.map(f => `${f} = ?`).join(', ');
+
+  try {
+    await db.run(
+      `UPDATE targets SET ${setClause} WHERE token_symbol = ?`,
+      [...values, token_symbol]
+    );
+    res.json({ status: 'ok' });
+  } catch (err) {
+    console.error('Update error:', err);
+    res.status(500).json({ error: 'Failed to update target' });
+  }
+});
+
 export default router;

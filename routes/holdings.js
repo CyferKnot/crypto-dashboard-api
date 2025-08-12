@@ -1,3 +1,4 @@
+//routes/horldings.js
 import express from 'express';
 import { getDB } from '../db/db.js';
 
@@ -9,15 +10,17 @@ router.get('/', async (req, res) => {
   try {
     const rows = await db.all(`
       SELECT 
-        token_symbol,
-        token_address,
+        coalesce(coingecko_id, token_symbol || ':' || token_address || ':' || chain) AS group_key,
+        MAX(token_symbol) AS token_symbol,
+        MAX(token_address) AS token_address,
         coingecko_id,
-        category,
+        MAX(chain) AS chain,
         SUM(balance) AS balance,
-        AVG(usd_price) AS usd_price,
-        SUM(usd_value) AS usd_value
+        MAX(usd_price) AS usd_price,
+        SUM(usd_value) AS usd_value,
+        COUNT(DISTINCT wallet_address) as wallet_count
       FROM holdings
-      GROUP BY token_symbol, token_address
+      GROUP BY group_key
       ORDER BY usd_value DESC
     `);
     res.json(rows);

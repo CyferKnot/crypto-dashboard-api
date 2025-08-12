@@ -1,9 +1,10 @@
+//routes/wallets.js
 import express from 'express';
 import { getDB } from '../db/db.js';
 
 const router = express.Router();
 
-router.post('/wallets', async (req, res) => {
+router.post('/', async (req, res) => {
   const { address, label, chain } = req.body;
   try {
     const db = await getDB();
@@ -17,13 +18,30 @@ router.post('/wallets', async (req, res) => {
   }
 });
 
-router.get('/wallets', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const db = await getDB();
     const wallets = await db.all(`SELECT * FROM wallets`);
     res.json(wallets);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/:address/:chain', async (req, res) => {
+  console.log('DELETE /wallets hit')
+  const db = await getDB();
+  const { address, chain } = req.params;
+
+  try {
+    await db.run(
+      `DELETE FROM wallets WHERE address = ? AND chain = ?`,
+      [address.toLowerCase(), chain.toLowerCase()]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error deleting wallet:', err);
+    res.status(500).json({ error: 'Failed to delete wallet' });
   }
 });
 

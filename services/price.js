@@ -10,16 +10,19 @@ export async function fetchTokenPrice(coingeckoId) {
   return json[coingeckoId].usd;
 }
 
-// services/price.js
 export async function fetchPrices(ids = []) {
   if (!ids.length) return {};
 
   const query = ids.join(',');
   const url = `https://api.coingecko.com/api/v3/simple/price?ids=${query}&vs_currencies=usd`;
+  console.log('Fetching CoinGecko prices for:', query);
 
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`Price fetch failed: ${res.status}`);
 
-  return await res.json(); // { id1: { usd: 1.23 }, id2: { usd: 0.87 }, ... }
+  if (!res.ok) {
+    const text = await res.text(); // Read the raw body
+    throw new Error(`Price fetch failed: ${res.status} - ${text.slice(0, 200)}`);
+  }
+
+  return await res.json(); // Only called if .ok is true
 }
-

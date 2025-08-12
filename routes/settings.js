@@ -1,59 +1,66 @@
 // routes/settings.js
 import express from 'express';
-import { getDB } from '../db/db.js';
+import {
+  getSettingsByType,
+  upsertSetting,
+  deleteSetting
+} from '../services/settings.js';
 
 const router = express.Router();
 
-// Utility: Get settings by type
-async function getSettingsByType(type) {
-  const db = await getDB();
-  return db.all(`SELECT setting_key AS key, setting_value AS value FROM settings WHERE setting_type = ?`, [type]);
-}
-
-// GET all chains
-// router.get('/chains', async (req, res) => {
-//   try {
-//     const chains = await getSettingsByType('chain');
-//     res.json(chains); // [{ key: 'eth', value: 'Ethereum' }, ...]
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// });
-router.get('/chains', async (req, res) => {
+/**
+ * Back-compat: /api/settings/spam → ["claim","reward",...]
+ */
+router.get('/spam', async (_req, res) => {
   try {
-    const db = await getDB();
-    const chains = await db.all(`SELECT setting_key AS key, setting_value AS value FROM settings WHERE setting_type = 'chain'`);
-    console.log('Fetched chains:', chains);
-    res.json(chains);
+    const list = await getSettingsByType('spam_filter');
+    res.json(list.map(s => s.key));
   } catch (err) {
-    console.error('Error loading chains:', err);
+    console.error('Error loading spam filter list:', err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// POST new or updated chain
-router.post('/chains', async (req, res) => {
-  const { key, value } = req.body;
-  if (!key || !value) return res.status(400).json({ error: 'Missing key or value' });
-
+/**
+ * GET /api/settings/:type
+ */
+router.get('/:type', async (req, res) => {
   try {
-    const db = await getDB();
-    await db.run(`INSERT OR REPLACE INTO settings (setting_type, setting_key, setting_value) VALUES ('chain', ?, ?)`, [key, value]);
-    res.json({ success: true });
+    const rows = await getSettingsByType(req.params.type);
+    res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error loading settings:', err);
+    res.status(500).json({ error: 'Failed to load settings' });
   }
 });
 
-// DELETE chain by key
-router.delete('/chains/:key', async (req, res) => {
-  const key = req.params.key;
+/**
+ * POST /api/settings/:type
+ */
+router.post('/:type', async (req, res) => {
   try {
-    const db = await getDB();
-    await db.run(`DELETE FROM settings WHERE setting_type = 'chain' AND setting_key = ?`, [key]);
-    res.json({ success: true });
+    const { key, value } = req.body || {};
+    if (!key || typeof value === 'undefined') {
+      return res.status(400).json({ error: 'Missing key or value' });
+    }
+    await upsertSetting(req.params.type, key, value);
+    res.sendStatus(201);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error upserting setting:', err);
+    res.status(500).json({ error: 'Failed to upsert setting' });
+  }
+});
+
+/**
+ * DELETE /api/settings/:type/:key
+ */
+router.delete('/:type/:key', async (req, res) => {
+  try {
+    await deleteSetting(req.params.type, req.params.key);
+    res.sendStatus(204);
+  } catch (err) {
+    console.error('Error deleting setting:', err);
+    res.status(500).json({ error: 'Failed to delete setting' });
   }
 });
 

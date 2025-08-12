@@ -71,19 +71,29 @@ async function fetchChains() {
 }
 
 async function populateChainOptions() {
-  const res = await fetch('/api/settings/chains');
-  const chains = await res.json();
+  try {
+    const res = await fetch('/api/chains'); // <- use this
+    const chains = await res.json();
+    console.log('Dropdown chains:', chains);
 
-  const select = document.getElementById('walletChain');
-  select.innerHTML = ''; // Clear existing options
+    const select = document.getElementById('walletChain');
+    if (!select) {
+      console.warn('#walletChain not found in DOM when populateChainOptions ran');
+      return;
+    }
 
-  chains.forEach(c => {
-    const option = document.createElement('option');
-    option.value = c.key;
-    option.textContent = c.value;
-    select.appendChild(option);
-  });
+    select.innerHTML = '';
+    chains.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.key;       // 'eth'
+      opt.textContent = c.value; // 'Ethereum'
+      select.appendChild(opt);
+    });
+  } catch (e) {
+    console.error('populateChainOptions failed:', e);
+  }
 }
+
 
 async function fetchWallets() {
   const res = await fetch('/api/wallets');
@@ -115,10 +125,3 @@ async function fetchWallets() {
     tbody.appendChild(row);
   }
 }
-
-async function deleteWallet(id) {
-  await fetch(`/api/wallets/${id}`, { method: 'DELETE' });
-  fetchWallets();
-}
-
-

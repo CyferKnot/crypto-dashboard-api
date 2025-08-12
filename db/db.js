@@ -63,19 +63,18 @@ export async function getDB() {
 }
 
 // --- Query Functions ---
-
 export async function upsertHolding(holding) {
   const db = await getDB();
-  const { wallet_address, token_symbol, token_address, balance, usd_price, usd_value, coingecko_id } = holding;
+  const { wallet_address, token_symbol, token_address, balance, usd_price, usd_value, coingecko_id, chain } = holding;
   await db.run(
-    `INSERT INTO holdings (wallet_address, token_symbol, token_address, balance, usd_price, usd_value, coingecko_id)
-     VALUES (?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(wallet_address, token_address) DO UPDATE SET
+    `INSERT INTO holdings (wallet_address, token_symbol, token_address, balance, usd_price, usd_value, coingecko_id, chain)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(wallet_address, token_address, chain) DO UPDATE SET
        balance=excluded.balance,
        usd_price=excluded.usd_price,
        usd_value=excluded.usd_value,
        coingecko_id=excluded.coingecko_id`,
-    [wallet_address, token_symbol, token_address, balance, usd_price, usd_value, coingecko_id]
+    [wallet_address, token_symbol, token_address, balance, usd_price, usd_value, coingecko_id, chain]
   );
 }
 
