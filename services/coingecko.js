@@ -23,6 +23,7 @@ export async function getPrices(idsParam) {
     : String(idsParam || '').split(',');
 
   const ids = [...new Set(input.map(s => s.trim().toLowerCase()).filter(Boolean))];
+  console.log('🐛 coingecko.js::getPrices called for:', ids);
 
   const now = Date.now();
   const results = {};

@@ -30,7 +30,7 @@ async function fetchHoldings() {
       tr.innerHTML = `
         <td>
           ${row.group_key}
-          ${row.coingecko_id ? '' : '<span class="badge bg-warning text-dark">Unmapped</span>'}
+          ${row.token_symbol ? '' : '<span class="badge bg-warning text-dark">Unmapped</span>'}
         </td>
         <td>${row.token_address}</td>
         <td>${parseFloat(row.balance).toFixed(4)}</td>
