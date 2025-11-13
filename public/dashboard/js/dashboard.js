@@ -62,6 +62,9 @@ async function fetchHoldings() {
 
     console.log('Chart data:', holdingsData);
     renderHoldingsChart(holdingsData); // ✅ Chart gets rendered here
+    const totalValue = holdingsData.reduce((sum, row) => sum + (row.usd_value || 0), 0);
+    document.getElementById('totals-box').innerText = `Total Portfolio Value: $${totalValue.toFixed(2)}`;
+
 
   } catch (err) {
     console.error('Failed to fetch holdings:', err);
